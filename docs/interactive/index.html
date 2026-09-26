@@ -1,0 +1,725 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather &amp; Air Quality Station &mdash; Interactive Tour</title>
+<style>
+  :root { --bg:#0e1116; --accent:#94a3b8; --accent-deep:#64748B; --panel:#0000002e;
+          --text:#e6e6e6; --muted:#9aa0a6; --good:#4ade80; --bad:#f87171; --warn:#fbbf24; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+  header{padding:18px 24px;border-bottom:1px solid #ffffff14}
+  header h1{margin:0;font-size:20px;color:var(--accent)}
+  header p{margin:6px 0 0;color:var(--muted);font-size:13px}
+  header .persist-note{margin-top:4px;font-size:11px;color:var(--muted);opacity:.8}
+  .badge{display:inline-block;background:var(--accent-deep);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:8px}
+  .pills{display:flex;gap:6px;flex-wrap:wrap;padding:12px 24px;border-bottom:1px solid #ffffff14}
+  .pill{font-size:12px;padding:4px 10px;border:1px solid #ffffff22;border-radius:999px;color:var(--muted);cursor:pointer;background:transparent}
+  .pill.active{background:var(--accent);color:#0e1116;font-weight:600;border-color:var(--accent)}
+  .pill.done{border-color:var(--good);color:var(--good)}
+  .pill.tool{border-style:dashed}
+  main{display:grid;grid-template-columns:1fr 1fr;min-height:60vh}
+  @media (max-width:880px){main{grid-template-columns:1fr}.lesson{border-right:none!important;border-bottom:1px solid #ffffff14}}
+  .lesson,.practice{padding:22px 24px}
+  .lesson{border-right:1px solid #ffffff14}
+  .lesson h2{color:var(--accent);margin-top:0;font-size:18px}
+  .lesson ul{padding-left:18px}.lesson li{margin:6px 0}
+  .trap{border-left:3px solid var(--warn);background:#fbbf2410;padding:10px 12px;border-radius:4px;margin:12px 0;font-size:14px}
+  .trap b{color:var(--warn)}
+  .worked{border-left:3px solid var(--accent-deep);background:#ffffff08;padding:10px 12px;border-radius:4px;margin:12px 0;font-size:14px}
+  figure{margin:14px 0}figcaption{color:var(--muted);font-size:12px;margin-top:6px}
+  .practice h3{margin-top:0;color:var(--accent);font-size:16px}
+  .nav{display:flex;gap:10px;align-items:center;padding:14px 24px;border-top:1px solid #ffffff14}
+  button{font:inherit}
+  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+  button.ghost:disabled{opacity:.35;cursor:not-allowed}
+  .counter{color:var(--muted);font-size:13px;margin-left:auto}
+  .qc{margin-top:16px;border-top:1px solid #ffffff14;padding-top:14px}
+  .qc h4{margin:0 0 8px;font-size:14px;color:var(--accent)}
+  .opt{all:unset;display:flex;align-items:center;gap:8px;padding:8px 10px;margin:4px 0;border:1px solid #ffffff1a;border-radius:8px;cursor:pointer;font-size:14px}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--good);background:#4ade8018}
+  .opt.wrong{border-color:var(--bad);background:#f8717118}
+  .opt[disabled]{cursor:default}
+  .explain{display:none;margin-top:8px;font-size:13px;color:var(--muted);border-left:2px solid var(--accent-deep);padding-left:10px}
+  .links{margin-top:14px;font-size:13px}
+  .links a{color:var(--accent);display:inline-block;margin:3px 0}
+  .links .kind{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-right:6px}
+  .video-card{display:flex;gap:10px;align-items:center;border:1px solid #ffffff1a;border-radius:8px;padding:8px;text-decoration:none;color:var(--text);margin-top:6px}
+  .video-card:hover{border-color:var(--accent)}
+  .video-card-thumb{width:96px;height:54px;border-radius:4px;background-size:cover;background-position:center;position:relative;flex-shrink:0}
+  .video-card-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;text-shadow:0 0 6px #000}
+  .video-card-info b{display:block;font-size:13px}
+  .video-card-info span{color:var(--muted);font-size:12px}
+  table.cheat{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+  table.cheat td,table.cheat th{border:1px solid #ffffff14;padding:6px 8px;text-align:left}
+  table.cheat th{color:var(--accent)}
+  code{background:#ffffff12;padding:1px 5px;border-radius:3px;font-family:ui-monospace,monospace;font-size:13px}
+  .quiz-wrap{padding:22px 24px;border-top:1px solid #ffffff14}
+  .q{margin-bottom:18px}.q p{font-weight:600;margin:0 0 6px}
+  #score{font-weight:700;color:var(--accent)}
+  .flash-stage{display:flex;justify-content:center;padding:18px 0;perspective:1200px}
+  .flash-card{width:min(420px,90%);height:190px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .45s}
+  .flash-card.flipped{transform:rotateY(180deg)}
+  .flash-face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid #ffffff22;border-radius:12px;
+              display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;font-size:16px}
+  .flash-front{background:#ffffff08;color:var(--text);font-weight:700}
+  .flash-back{background:var(--accent-deep);color:#fff;transform:rotateY(180deg);font-size:14px;font-weight:400}
+  .flash-controls{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px}
+  .match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .match-col{display:flex;flex-direction:column;gap:8px}
+  .match-btn{all:unset;padding:10px 12px;border:1px solid #ffffff1a;border-radius:8px;cursor:pointer;font-size:13px;text-align:left}
+  .match-btn:hover{border-color:var(--accent)}
+  .match-btn.sel{border-color:var(--accent);background:#94a3b818}
+  .match-btn.matched{border-color:var(--good);background:#4ade8018;opacity:.55;cursor:default}
+  .match-btn.wrong{border-color:var(--bad);background:#f8717118}
+  .sp-section{border:1px solid #ffffff1a;border-radius:8px;padding:14px 16px;margin-top:14px}
+  .sp-section h4{margin:0 0 8px;color:var(--accent);font-size:14px}
+  .sp-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;margin:8px 0}
+  .sp-row label{color:var(--muted);display:flex;align-items:center;gap:5px}
+  .sp-row input[type=number]{width:76px;background:#ffffff0c;border:1px solid #ffffff22;border-radius:6px;color:var(--text);padding:4px 8px;font-family:ui-monospace,monospace;font-size:13px}
+  .sp-readout{background:#000;border-radius:6px;padding:10px 12px;margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#94a3b8}
+  .sp-readout b{color:var(--accent)}
+  .sp-good{color:var(--good)}
+  .sp-bad{color:var(--bad)}
+  .report-card{border:1px solid #ffffff22;border-radius:10px;padding:20px 22px;max-width:560px}
+  .report-card h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .report-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff10;font-size:14px}
+  .report-row .grade{font-weight:700}
+  .grade-A{color:var(--good)} .grade-B{color:#a3e635} .grade-C{color:var(--warn)} .grade-D,.grade-F{color:var(--bad)} .grade-dash{color:var(--muted)}
+  .report-overall{display:flex;align-items:baseline;gap:10px;margin:14px 0}
+  .report-overall .big{font-size:40px;font-weight:800}
+  #printBtn{margin-top:16px}
+  @media print{
+    header .persist-note, .pills, #nav, .report-card #printBtn{display:none!important}
+    body{background:#fff;color:#111}
+    .report-card{border-color:#ccc;max-width:none}
+    .report-row{border-bottom-color:#ddd}
+  }
+</style></head>
+<body>
+<header>
+  <h1>Weather &amp; Air Quality Station <span class="badge">Chain K &middot; Hands-on</span></h1>
+  <p>Sensors &amp; real-world data &rarr; solar power &amp; battery sizing &rarr; connectivity
+     (wifi vs. LoRa) &rarr; weatherproofing &amp; reliability. Compute a real daily energy balance and
+     a real battery-autonomy number — sunny day vs. cloudy week — in the
+     <b>Solar &amp; Battery Sizing Simulator</b> tab before your station is 20 feet up a pole with no
+     wall outlet nearby.</p>
+  <p class="persist-note">Progress (quick checks, quiz score, flashcards known) saves in this browser
+     only &mdash; localStorage, not an account. Clearing site data or switching browsers resets it.</p>
+</header>
+
+<div class="pills" id="pills"></div>
+
+<main>
+  <section class="lesson" id="lesson"></section>
+  <section class="practice" id="practice"></section>
+</main>
+
+<div class="nav" id="nav">
+  <button class="ghost" id="prev">&larr; Previous</button>
+  <button class="ghost" id="next">Next &rarr;</button>
+  <span class="counter" id="counter"></span>
+</div>
+
+<div class="quiz-wrap" id="quizWrap" style="display:none">
+  <h3 style="color:var(--accent);margin-top:0">Check Your Understanding</h3>
+  <div id="quiz"></div>
+  <p>Score: <span id="score">0</span> / <span id="total"></span></p>
+</div>
+
+<div class="quiz-wrap" id="toolWrap" style="display:none"></div>
+
+<script>
+const LESSONS = [
+{
+  short:"Sensors & real-world data",
+  title:"Wiring the BME280 and rain gauge, and trusting the readings",
+  body:`<p>Getting a believable number out of a sensor is a different skill from wiring it up — and a
+  weather station is the project in this chain where "believable" actually matters, not just
+  "changes."</p>
+  <ul><li>The <b>BME280</b> is one cheap I2C breakout covering temperature, humidity, and pressure —
+  but clones exist that drift badly over time compared to a genuine, well-documented part. A generic
+  humidity sensor with no datasheet at all is a real risk, not just a minor corner-cut.</li>
+  <li>A <b>tipping-bucket rain gauge</b> has a small bucket that tips once it collects a fixed volume of
+  water, closing a reed switch and producing one pulse per tip. The raw pulse count means nothing on its
+  own — it only converts to real rainfall depth through a stated <b>calibration figure</b> (commonly
+  0.2-0.5mm per tip).</li>
+  <li>Optional air-quality add-ons — a <b>PMS5003</b> (PM2.5 particulate) or <b>SCD40</b> (CO2) — bolt
+  onto the same I2C/UART pattern once temperature/humidity/pressure and rain are working.</li></ul>
+  <div class="trap"><b>The trap — a listed red flag:</b> a rain gauge sold with no calibration figure
+  (mm per tip). Without it, the sensor can only ever tell you "some rain happened," never how much —
+  the calibration number is the entire difference between a real measurement and a binary rain/no-rain
+  flag.</div>
+  <div class="worked"><b>Worked:</b> a rain gauge with a stated 0.2mm/tip calibration converts a raw
+  tip-count directly into a real depth of rainfall (10 tips = 2.0mm); an uncalibrated gauge with the
+  identical mechanical tipping bucket can only report "10 tips happened," with no way to convert that
+  into a number anyone could compare to an actual weather report.</div>`,
+  practice:`<h3>Practice — before trusting a reading</h3>
+  <ol><li>Look up (or measure) your specific rain gauge's mm-per-tip calibration figure before treating
+  any tip count as a real rainfall measurement.</li></ol>`,
+  quick:{ q:"Why is a rain gauge's mm-per-tip calibration figure essential, not just a nice-to-have detail?",
+    choices:["Without it, a raw tip count has no way to convert into an actual rainfall depth — it can only report that rain happened, not how much","Calibration figures only affect how the sensor looks, not its actual readings","Every tipping-bucket rain gauge uses an identical calibration figure by design, so it's never actually needed","Calibration only matters for air-quality sensors, never for rain gauges"],
+    a:0, ex:"The calibration figure is the entire conversion factor between 'the bucket tipped N times' and 'N × (mm per tip) millimeters of rain fell' — without it, the raw count is not a real measurement." },
+  links:[
+    {type:"read", label:"Random Nerd Tutorials — ESP32 with BME280 using Arduino IDE", url:"https://randomnerdtutorials.com/esp32-bme280-arduino-ide-pressure-temperature-humidity/"}
+  ]
+},
+{
+  short:"Solar power & battery sizing",
+  title:"Sizing solar power for the cloudiest week, not the sunniest day",
+  body:`<p>This is the actual engineering decision this project is built around: a panel that looks
+  comfortably oversized on a sunny day can still leave a station dead after a real cloudy week, if it
+  was never sized against that scenario in the first place.</p>
+  <ul><li><b>Daily consumption</b>: a station's average current draw (mostly asleep, waking briefly to
+  sample and report) times 24 hours gives a real daily mAh budget.</li>
+  <li><b>Daily harvest</b>: panel watts times real <i>sun-hours</i> (not daylight hours — cloud cover
+  matters enormously) times a real-world <b>efficiency derate</b> (angle, dust, temperature losses — a
+  panel never delivers its full rated output in practice), converted to mAh at the battery's voltage.</li>
+  <li>The actual design target is the <b>net daily balance</b> (harvest minus consumption) staying
+  positive through the <i>cloudiest realistic week</i> — not just an average or sunny day.</li>
+  <li>If running a real deficit, <b>autonomy</b> — battery capacity (times a safely-usable fraction,
+  since a LiPo shouldn't be run to empty) divided by the daily deficit — gives the real number of days
+  until the low-voltage cutoff kicks in.</li></ul>
+  <div class="trap"><b>The trap — a listed Common Mistake:</b> battery undersized for winter's shorter
+  solar days. The same setup that nets a healthy surplus on a 6-sun-hour summer day can run a real
+  deficit on a 1-sun-hour winter day — sizing only against the good scenario is exactly how this
+  mistake happens.</div>
+  <div class="worked"><b>Worked:</b> a 1W panel and a 30mA average draw nets roughly +496mAh/day on a
+  sunny (6 sun-hour) day, but the identical setup nets roughly -517mAh/day on a cloudy (1 sun-hour) day
+  — leaving only about 3 days of autonomy on a 2000mAh battery before the low-voltage cutoff, despite
+  looking perfectly fine on paper for a sunny day.</div>`,
+  practice:`<h3>Practice — Solar & Battery Sizing Simulator</h3>
+  <ol><li>Open the <b>Solar &amp; Battery Sizing Simulator</b> tab and compare the "Sunny day" and
+  "Cloudy week" presets on the same hardware. Notice the balance can flip from surplus to deficit
+  entirely from the sun-hours input changing.</li></ol>`,
+  quick:{ q:"Why can a solar setup that comfortably covers a sunny day still leave a station dead after a week of clouds?",
+    choices:["Daily harvest depends heavily on real sun-hours, which crash during cloudy weather even though the panel and consumption never changed — a design only validated against a sunny day was never tested against the scenario that actually matters","Batteries lose capacity permanently after a single cloudy day","Solar panels stop working entirely below a certain cloud cover threshold","Consumption automatically increases during cloudy weather"],
+    a:0, ex:"The panel and load didn't change — only the real sun-hours available did, which is exactly why sizing must be validated against the worst realistic case, not the best one." },
+  links:[
+    {type:"watch", vid:"32EKKl1E6iA", channel:"KiloWatt Maker with Younes", label:"How To Size A Solar Charge Controller? (MPPT & PWM)", url:"https://www.youtube.com/watch?v=32EKKl1E6iA"}
+  ]
+},
+{
+  short:"Connectivity",
+  title:"Choosing wifi vs. LoRa for a remote, low-bandwidth node",
+  body:`<p>This node has an unusually easy connectivity decision once you look at what it actually needs
+  to send: a handful of numbers, occasionally — not a live video stream.</p>
+  <ul><li><b>Wifi</b> offers higher bandwidth and dead-simple integration (the ESP32 has it built in),
+  but real range is limited and it's power-hungry relative to LoRa — and an outdoor mounting spot is
+  often exactly where wifi coverage is weakest.</li>
+  <li><b>LoRa</b> trades bandwidth for much longer range (kilometers, terrain-dependent) and far lower
+  power — a great match for infrequent, tiny payloads, the same tradeoff Walkie-Talkie-Build's Path A
+  makes for text messages instead of sensor readings.</li>
+  <li>The real decision isn't "which radio is generally better" — it's "does wifi actually reach this
+  exact mounting spot." A station moved a few dozen feet outdoors can lose a wifi signal that was fine
+  on a desk.</li></ul>
+  <div class="trap"><b>The trap — a listed Common Mistake:</b> wifi range from an outdoor mounting spot
+  back to the router. LoRa avoids this entirely if wifi doesn't reach — worth checking your actual
+  mounting spot's signal before committing to a board and writing any code around it.</div>
+  <div class="worked"><b>Worked:</b> the same station moved from a spot with full wifi bars to the far
+  end of the yard can lose the connection entirely; swapping to LoRa (or a LoRa32 board) fixes exactly
+  that problem, with no other design change needed — the sensor and power design stay identical.</div>`,
+  practice:`<h3>Practice — before committing to a radio</h3>
+  <ol><li>Test your actual wifi signal strength at the real intended mounting spot — not from inside,
+  not from a spot you're guessing about — before ordering a board around that decision.</li></ol>`,
+  quick:{ q:"Why is a weather station's data profile (a handful of numbers, sent occasionally) specifically well-suited to LoRa's tradeoffs?",
+    choices:["LoRa trades bandwidth for range and power efficiency — a great match for infrequent, tiny payloads, exactly what a sensor reading is","LoRa is simply faster than wifi in every respect, with no real tradeoff involved","Weather stations are physically incapable of using wifi hardware","LoRa requires no power at all, unlike wifi"],
+    a:0, ex:"LoRa's whole design tradeoff — much lower bandwidth in exchange for much longer range and lower power — matches a data profile of small, infrequent readings almost perfectly, which is exactly why it fits here even though it would be a poor fit for something needing high throughput." },
+  links:[
+    {type:"read", label:"LoRaWAN vs Wi-Fi for IoT Sensors: Range, Power and Gateway Comparison", url:"https://robustel.com/lorawan-vs-wi-fi-for-iot-sensors-range-power-and-gateway-comparison/"}
+  ]
+},
+{
+  short:"Weatherproofing & reliability",
+  title:"Weatherproofing correctly, and building for months unattended",
+  body:`<p>This project reuses Walkie-Talkie-Build's exact waterproofing pattern — IP67 enclosure,
+  sealed cable glands matched to wire gauge — but adds one detail specific to a barometric sensor that
+  trips people up.</p>
+  <ul><li>The <b>BME280 needs a vent membrane</b>, not a sealed wall. A fully sealed enclosure traps a
+  fixed volume of air, and the pressure inside that trapped air drifts from the real outside pressure as
+  temperature changes — the sensor ends up reading a wrong number, not just a protected one.</li>
+  <li>The same vent membrane that lets pressure equalize also happens to reduce <b>condensation</b>: a
+  fully sealed box with any day/night temperature swing will eventually condense moisture inside it —
+  two real problems, solved by the same one design choice.</li>
+  <li><b>Long-term unattended reliability</b> means power, connectivity, and weatherproofing all have to
+  keep working together continuously, with nobody checking on it for weeks — there's no wall power to
+  fall back on if solar underperforms, and no easy access to reboot or debug remotely.</li></ul>
+  <div class="trap"><b>The trap — a listed detail:</b> a fully sealed enclosure reading barometric
+  pressure wrong. It's tempting to seal everything for maximum protection, but the BME280 specifically
+  needs a controlled path to outside air, not just physical protection from rain.</div>
+  <div class="worked"><b>Worked:</b> the exact detail from the Weatherproof Enclosure diagram — the
+  BME280 sits behind a vent membrane rather than a sealed wall, specifically because a fully sealed box
+  reads pressure wrong, not only because of condensation risk.</div>`,
+  practice:`<h3>Practice — before mounting outside</h3>
+  <ol><li>Confirm your enclosure design has an explicit vent membrane for the BME280 — not just a
+  "sealed and protected" box — before your first real outdoor test.</li></ol>`,
+  quick:{ q:"Why does a fully sealed enclosure cause a barometric pressure sensor to read incorrectly, specifically?",
+    choices:["A sealed box traps a fixed volume of air whose internal pressure drifts from the real outside pressure as temperature changes, so the sensor reads that trapped air's pressure, not the actual outside pressure","Sealed enclosures physically damage pressure sensors on contact","Pressure sensors stop functioning entirely without direct sunlight","Sealing an enclosure has no effect on any sensor reading, only on water protection"],
+    a:0, ex:"The sensor is doing its job correctly — it's just measuring the wrong air. A sealed box's internal air pressure is not the same as the real outside pressure once temperature changes, which is exactly why a vent path to outside air matters here specifically." },
+  links:[
+    {type:"read", label:"How to Design an IP65/IP67 Enclosure for Outdoor Electronics", url:"https://ohmframe.com/blog/how-to-design-enclosure-ip65-ip67"}
+  ]
+}
+];
+
+const QUIZ = [
+ {q:"Why is a rain gauge's mm-per-tip calibration figure essential for a real measurement, not just a nice-to-have detail?",
+  o:["Without it, a raw tip count has no way to convert into an actual rainfall depth — it can only report that rain happened, not how much","Calibration figures are purely cosmetic and never affect the actual reading","All tipping-bucket rain gauges share one universal calibration figure, so it's never actually needed","Calibration only applies to digital rain gauges, never mechanical tipping-bucket ones"],c:0,
+  ex:"The calibration figure is the entire conversion factor between 'the bucket tipped N times' and a real depth of rainfall — without it, the raw count is not a usable measurement."},
+ {q:"A solar setup nets a healthy surplus on a 6-sun-hour sunny day. Why can the identical hardware run a real deficit on a 1-sun-hour cloudy day?",
+  o:["Daily harvest depends heavily on real sun-hours, which crash during cloudy weather even though the panel and daily consumption never changed","The battery's total capacity shrinks permanently during cloudy weather","Consumption always increases automatically whenever cloud cover increases","Solar panels physically stop generating any power below a certain cloud density"],c:0,
+  ex:"Nothing about the hardware changed — only the real sun-hours available did. This is exactly why sizing has to be validated against the worst realistic scenario, not just an average or sunny one."},
+ {q:"A station has a 2000mAh battery, an 80% usable fraction, and a real daily deficit of about 517mAh during a cloudy week. Roughly how many days of autonomy does it have before the low-voltage cutoff?",
+  o:["About 3 days","About 30 days","Indefinitely, since the battery is fully charged","About 12 hours"],c:0,
+  ex:"(2000 × 0.8) / 517 ≈ 3.09 days — usable capacity divided by the daily deficit gives the real number of days the battery can sustain that shortfall."},
+ {q:"Why is a weather station's data profile (small readings, sent occasionally) specifically well-suited to LoRa rather than wifi?",
+  o:["LoRa trades bandwidth for much longer range and lower power — exactly matched to small, infrequent payloads like a sensor reading, unlike wifi which is built for higher-throughput, more power-hungry use","LoRa hardware is strictly faster than wifi in every measurable respect","A weather station cannot physically connect to wifi hardware","LoRa eliminates the need for any power source at all"],c:0,
+  ex:"LoRa's core tradeoff (lower bandwidth for much longer range and lower power) matches a small, infrequent data profile almost perfectly — the same reason it would be a poor fit for something needing high throughput."},
+ {q:"Why does a fully sealed enclosure cause a barometric pressure sensor inside it to read incorrectly?",
+  o:["The sealed box traps a fixed volume of air whose pressure drifts from the real outside pressure as temperature changes, so the sensor accurately measures the wrong air, not the actual outside conditions","Sealed enclosures physically damage the pressure sensor over time","Pressure sensors require direct sunlight to function at all","Sealing an enclosure has no measurable effect on any sensor's readings"],c:0,
+  ex:"The sensor itself works fine — it's measuring trapped air that no longer matches real outside pressure as temperature shifts, which is why a vent path to outside air is required specifically for this sensor."},
+ {q:"Why does the same vent membrane that fixes the barometric pressure problem also help prevent condensation?",
+  o:["A fully sealed box with any day/night temperature swing eventually condenses moisture inside it; a vent path that equalizes pressure also lets that moisture escape instead of accumulating","Condensation and pressure readings are entirely unrelated problems that happen to share no common fix","Vent membranes work by heating the air inside the enclosure","Condensation only happens in enclosures that already have a pressure sensor installed"],c:0,
+  ex:"Both problems trace back to the same root cause — a fully sealed volume of air — so a single vent-membrane design choice addresses both, rather than needing two separate fixes."},
+ {q:"Why does the buying guide flag generic humidity sensors with no datasheet as a red flag, specifically for a project like this?",
+  o:["Undocumented BME280 clones exist that drift badly over time compared to the genuine part, which matters far more for a station meant to run accurately, unattended, for months","All humidity sensors perform identically regardless of documentation or manufacturer","Datasheets only affect a sensor's price, never its actual measurement accuracy","Generic sensors are illegal to use in outdoor electronics projects"],c:0,
+  ex:"A station meant to run unattended for months specifically needs readings that stay accurate over time — exactly the property an undocumented, drift-prone clone can't guarantee, even if it seems to work fine on day one."}
+];
+
+/* Key terms — pulled from the bolded/code terms across the four lessons above. */
+const KEY_TERMS = [
+  ["BME280", "One cheap I2C breakout covering temperature, humidity, and pressure — clones exist that drift badly."],
+  ["Tipping-bucket rain gauge", "Each tip closes a reed switch; the raw pulse count only becomes real rainfall depth via a stated mm-per-tip calibration figure."],
+  ["PMS5003 / SCD40", "Optional air-quality add-ons (PM2.5 particulate / CO2) bolting onto the same I2C/UART pattern."],
+  ["Daily consumption (mAh)", "A station's average current draw × 24 hours — the real daily energy budget."],
+  ["Daily harvest (mAh) & efficiency derate", "Panel watts × real sun-hours × a real-world efficiency factor — a panel never delivers its full rated output."],
+  ["Net daily balance", "Harvest minus consumption — must stay positive through the cloudiest realistic week, not just an average day."],
+  ["Autonomy (days)", "Usable battery capacity ÷ daily deficit — how long the battery lasts before the low-voltage cutoff."],
+  ["Low-voltage cutoff", "Protects the LiPo from over-discharge — worth paying for over a bare panel+battery."],
+  ["\"Cloudiest week\" sizing target", "The real design target — not the sunniest or average day."],
+  ["Wifi tradeoffs", "Higher bandwidth, easy integration, but limited range and more power-hungry than LoRa."],
+  ["LoRa tradeoffs", "Much longer range and lower power, in exchange for far lower bandwidth."],
+  ["Small/infrequent data profile", "A handful of readings sent occasionally — exactly what LoRa's tradeoff is built for."],
+  ["Vent membrane", "Lets pressure equalize and moisture escape — the fix for both the pressure-reading problem and condensation."],
+  ["Sealed enclosure pressure error", "A fully sealed box's trapped air pressure drifts from real outside pressure as temperature changes."],
+  ["IP67 + sealed cable glands", "The same waterproofing pattern reused directly from Walkie-Talkie-Build."],
+  ["Condensation", "A real risk in any sealed box with day/night temperature swings — the vent membrane also fixes this."],
+  ["Unattended long-term reliability", "Power, connectivity, and weatherproofing all have to keep working together for weeks with no one checking."],
+  ["Solar charge controller", "Manages panel-to-battery charging and enforces the low-voltage cutoff."]
+];
+
+const STATE_KEY = 'chainK_weatherAirQualityStation_v1';
+function loadState(){
+  try{ const raw = localStorage.getItem(STATE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+function saveState(){
+  try{
+    localStorage.setItem(STATE_KEY, JSON.stringify({
+      answered, quizScore: score, quizDone: [...done], fcKnown: [...fcKnown],
+      popLastScore, popLastTotal, popAttemptsCount, matchBestAttempts,
+      spParams
+    }));
+  }catch(e){ /* storage unavailable — progress just won't persist this session */ }
+}
+const SAVED = loadState();
+
+let idx = 0;
+const answered = SAVED && Array.isArray(SAVED.answered) && SAVED.answered.length === LESSONS.length
+  ? SAVED.answered.slice() : new Array(LESSONS.length).fill(false);
+
+function videoCard(l){
+  return `<a class="video-card" href="${l.url}" target="_blank" rel="noopener">
+    <span class="video-card-thumb" style="background-image:url('https://img.youtube.com/vi/${l.vid}/hqdefault.jpg')">
+      <span class="video-card-play">&#9658;</span></span>
+    <span class="video-card-info"><b>${l.label}</b><span>${l.channel} &middot; opens on YouTube</span></span></a>`;
+}
+function renderLinks(links){
+  if(!links || !links.length) return '';
+  const rows = links.map(l => l.type === 'watch'
+    ? videoCard(l)
+    : `<div><span class="kind">${l.type}</span><a href="${l.url}" target="_blank" rel="noopener">${l.label}</a></div>`).join('');
+  return `<div class="links"><h4 style="margin:0 0 6px;font-size:14px;color:var(--accent)">Continue learning</h4>${rows}</div>`;
+}
+function renderQuick(i){
+  const q = LESSONS[i].quick;
+  if(!q) return '';
+  const isDone = answered[i];
+  return `<div class="qc"><h4>Quick check</h4><p style="margin:0 0 6px;font-size:14px">${q.q}</p>
+    <div id="qcopts">${q.choices.map((c,ci)=>`<button class="opt ${isDone && ci===q.a?'correct':''}" data-ci="${ci}" ${isDone?'disabled':''}>${c}</button>`).join('')}</div>
+    <div class="explain" id="qcex" style="${isDone?'display:block':''}">${isDone?q.ex:''}</div></div>`;
+}
+
+const TOOLS = ['Flashcards','Match','Pop Quiz','Cheat Sheet','Solar & Battery Sizing Simulator','Report Card'];
+function pillsHTML(){
+  const lessonPills = LESSONS.map((l,i)=>
+    `<button class="pill ${i===idx?'active':''} ${answered[i]?'done':''}" data-i="${i}">${i+1}. ${l.short}</button>`).join('');
+  const quizPill = `<button class="pill ${idx===LESSONS.length?'active':''}" data-i="${LESSONS.length}">Quiz</button>`;
+  const toolPills = TOOLS.map((t,ti)=>{
+    const i = LESSONS.length + 1 + ti;
+    return `<button class="pill tool ${i===idx?'active':''}" data-i="${i}">${t}</button>`;
+  }).join('');
+  return lessonPills + quizPill + toolPills;
+}
+function render(){
+  document.getElementById('pills').innerHTML = pillsHTML();
+  const isQuiz = idx === LESSONS.length;
+  const isTool = idx > LESSONS.length;
+  document.querySelector('main').style.display = (isQuiz || isTool) ? 'none' : 'grid';
+  document.getElementById('quizWrap').style.display = isQuiz ? 'block' : 'none';
+  document.getElementById('toolWrap').style.display = isTool ? 'block' : 'none';
+  document.getElementById('nav').style.display = isTool ? 'none' : 'flex';
+  if(isTool){ renderTool(idx - LESSONS.length - 1); return; }
+  if(isQuiz){ document.getElementById('counter').textContent = 'Final quiz'; renderQuiz(); syncNav(); return; }
+  const L = LESSONS[idx];
+  document.getElementById('lesson').innerHTML =
+    `<h2>${idx+1}. ${L.title}</h2>${L.body}${renderLinks(L.links)}${renderQuick(idx)}`;
+  document.getElementById('practice').innerHTML = L.practice;
+  document.getElementById('counter').textContent = `Lesson ${idx+1} of ${LESSONS.length}`;
+  const opts = document.getElementById('qcopts');
+  if(opts) opts.addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if(!b || b.disabled) return;
+    const q = LESSONS[idx].quick, pick = +b.dataset.ci;
+    [...opts.children].forEach((el,ci)=>{ el.disabled = true;
+      if(ci===q.a) el.classList.add('correct'); else if(ci===pick) el.classList.add('wrong'); });
+    const ex = document.getElementById('qcex'); ex.textContent = q.ex; ex.style.display='block';
+    answered[idx] = true;
+    saveState();
+    syncNav(); render2Pills();
+  });
+  syncNav();
+}
+function render2Pills(){
+  document.querySelectorAll('.pill').forEach((p,i)=>{ if(answered[i]) p.classList.add('done'); });
+}
+function syncNav(){
+  document.getElementById('prev').disabled = idx === 0;
+  const n = document.getElementById('next');
+  const gated = idx < LESSONS.length && !answered[idx];
+  n.disabled = idx > LESSONS.length - 1 || gated;
+  n.textContent = gated ? 'Answer the quick check to continue' : 'Next →';
+}
+
+let score = SAVED && Number.isFinite(SAVED.quizScore) ? SAVED.quizScore : 0;
+let done = new Set(SAVED && Array.isArray(SAVED.quizDone) ? SAVED.quizDone : []);
+function renderQuiz(){
+  document.getElementById('total').textContent = QUIZ.length;
+  document.getElementById('quiz').innerHTML = QUIZ.map((it,qi)=>{
+    const isDone = done.has(qi);
+    return `<div class="q"><p>${qi+1}. ${it.q}</p>
+      <div data-q="${qi}">${it.o.map((o,oi)=>`<button class="opt ${isDone && oi===it.c?'correct':''}" data-q="${qi}" data-o="${oi}" ${isDone?'disabled':''}>${o}</button>`).join('')}</div>
+      <div class="explain" id="qex${qi}" style="${isDone?'display:block':''}">${isDone?it.ex:''}</div></div>`;
+  }).join('');
+  document.getElementById('score').textContent = score;
+}
+document.getElementById('quiz').addEventListener('click', e => {
+  const b = e.target.closest('.opt'); if(!b || b.disabled) return;
+  const qi = +b.dataset.q, oi = +b.dataset.o, it = QUIZ[qi];
+  if(done.has(qi)) return; done.add(qi);
+  b.parentElement.querySelectorAll('.opt').forEach((el,i)=>{ el.disabled = true;
+    if(i===it.c) el.classList.add('correct'); else if(i===oi) el.classList.add('wrong'); });
+  const ex = document.getElementById('qex'+qi); ex.textContent = it.ex; ex.style.display='block';
+  if(oi===it.c){ score++; document.getElementById('score').textContent = score; }
+  saveState();
+});
+
+function shuffled(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+function renderTool(view){
+  if(view===0) return renderFlash();
+  if(view===1) return renderMatch();
+  if(view===2) return renderPop();
+  if(view===3) return renderCheat();
+  if(view===4) return renderSolarSim();
+  if(view===5) return renderReportCard();
+}
+
+let fcIdx = 0;
+const fcKnown = new Set(SAVED && Array.isArray(SAVED.fcKnown) ? SAVED.fcKnown : []);
+function renderFlash(){
+  const t = KEY_TERMS[fcIdx];
+  document.getElementById('toolWrap').innerHTML = `
+    <h3 style="color:var(--accent);margin-top:0">Flashcards</h3>
+    <p style="color:var(--muted);font-size:13px">Click a card to flip it. ${fcKnown.size} / ${KEY_TERMS.length} marked known.</p>
+    <div class="flash-stage"><div class="flash-card" id="flashCard">
+      <div class="flash-face flash-front">${t[0]}</div>
+      <div class="flash-face flash-back">${t[1]}</div>
+    </div></div>
+    <div class="flash-controls">
+      <button class="ghost" id="fcPrev">&larr; Prev</button>
+      <span class="counter" style="margin:0 6px">${fcIdx+1} / ${KEY_TERMS.length}</span>
+      <button class="ghost" id="fcKnow">${fcKnown.has(fcIdx) ? '✓ Known' : 'Mark known'}</button>
+      <button class="ghost" id="fcNext">Next &rarr;</button>
+    </div>`;
+  document.getElementById('flashCard').onclick = () => document.getElementById('flashCard').classList.toggle('flipped');
+  document.getElementById('fcPrev').onclick = () => { fcIdx = (fcIdx - 1 + KEY_TERMS.length) % KEY_TERMS.length; renderFlash(); };
+  document.getElementById('fcNext').onclick = () => { fcIdx = (fcIdx + 1) % KEY_TERMS.length; renderFlash(); };
+  document.getElementById('fcKnow').onclick = () => {
+    if(fcKnown.has(fcIdx)) fcKnown.delete(fcIdx); else fcKnown.add(fcIdx);
+    saveState(); renderFlash();
+  };
+}
+
+let matchPairs = [], matchTermOrder = [], matchDefOrder = [], matchSel = null, matchMatched = new Set(), matchAttempts = 0;
+let matchBestAttempts = SAVED && Number.isFinite(SAVED.matchBestAttempts) ? SAVED.matchBestAttempts : null;
+function newMatchRound(){
+  const n = Math.min(8, KEY_TERMS.length);
+  const idxs = shuffled([...Array(KEY_TERMS.length).keys()]).slice(0, n);
+  matchPairs = idxs.map(i => ({ key:i, term:KEY_TERMS[i][0], def:KEY_TERMS[i][1] }));
+  matchTermOrder = shuffled(matchPairs);
+  matchDefOrder = shuffled(matchPairs);
+  matchSel = null; matchMatched = new Set(); matchAttempts = 0;
+}
+function matchBtn(p, side){
+  const isMatched = matchMatched.has(p.key);
+  const isSel = matchSel && matchSel.key === p.key && matchSel.side === side;
+  const label = side === 'term' ? p.term : p.def;
+  return `<button class="match-btn ${isMatched?'matched':''} ${isSel?'sel':''}" data-key="${p.key}" data-side="${side}" ${isMatched?'disabled':''}>${label}</button>`;
+}
+function matchStatusText(){
+  if(matchMatched.size === matchPairs.length) return `Solved in ${matchAttempts} attempts!`;
+  return `Match each term to its definition. Attempts: ${matchAttempts}`;
+}
+function renderMatch(){
+  if(!matchPairs.length) newMatchRound();
+  document.getElementById('toolWrap').innerHTML = `
+    <h3 style="color:var(--accent);margin-top:0">Match</h3>
+    <p style="color:var(--muted);font-size:13px" id="matchStatus">${matchStatusText()}</p>
+    <div class="match-grid">
+      <div class="match-col">${matchTermOrder.map(p => matchBtn(p,'term')).join('')}</div>
+      <div class="match-col">${matchDefOrder.map(p => matchBtn(p,'def')).join('')}</div>
+    </div>
+    <button class="ghost" id="matchNew" style="margin-top:14px">New round</button>`;
+  document.querySelectorAll('.match-btn').forEach(b => b.addEventListener('click', onMatchClick));
+  document.getElementById('matchNew').onclick = () => { newMatchRound(); renderMatch(); };
+}
+function onMatchClick(e){
+  const b = e.currentTarget;
+  const key = +b.dataset.key, side = b.dataset.side;
+  if(matchMatched.has(key)) return;
+  if(!matchSel || matchSel.side === side){ matchSel = { key, side }; renderMatch(); return; }
+  matchAttempts++;
+  if(matchSel.key === key){
+    matchMatched.add(key);
+    matchSel = null;
+    if(matchMatched.size === matchPairs.length){
+      if(matchBestAttempts === null || matchAttempts < matchBestAttempts) matchBestAttempts = matchAttempts;
+      saveState();
+    }
+    renderMatch();
+  } else {
+    b.classList.add('wrong');
+    const status = document.getElementById('matchStatus');
+    if(status) status.textContent = `Not quite. Attempts: ${matchAttempts}`;
+    setTimeout(() => { matchSel = null; renderMatch(); }, 500);
+  }
+}
+
+function popPool(){
+  const fromLessons = LESSONS.filter(l => l.quick).map(l => ({ q:l.quick.q, opts:l.quick.choices, correct:l.quick.a, ex:l.quick.ex }));
+  const fromQuiz = QUIZ.map(q => ({ q:q.q, opts:q.o, correct:q.c, ex:q.ex }));
+  return [...fromLessons, ...fromQuiz];
+}
+let popSet = [], popIdx = 0, popScore = 0, popDone = false;
+let popLastScore = SAVED && Number.isFinite(SAVED.popLastScore) ? SAVED.popLastScore : null;
+let popLastTotal = SAVED && Number.isFinite(SAVED.popLastTotal) ? SAVED.popLastTotal : null;
+let popAttemptsCount = SAVED && Number.isFinite(SAVED.popAttemptsCount) ? SAVED.popAttemptsCount : 0;
+function newPop(){
+  const pool = shuffled(popPool());
+  popSet = pool.slice(0, Math.min(5, pool.length));
+  popIdx = 0; popScore = 0; popDone = false;
+}
+function renderPop(){
+  if(!popSet.length) newPop();
+  if(popDone){
+    document.getElementById('toolWrap').innerHTML = `
+      <h3 style="color:var(--accent);margin-top:0">Pop Quiz</h3>
+      <p>Score: <b>${popScore} / ${popSet.length}</b></p>
+      <button class="ghost" id="popAgain">Try another 5</button>`;
+    document.getElementById('popAgain').onclick = () => { newPop(); renderPop(); };
+    return;
+  }
+  const it = popSet[popIdx];
+  document.getElementById('toolWrap').innerHTML = `
+    <h3 style="color:var(--accent);margin-top:0">Pop Quiz</h3>
+    <p style="color:var(--muted);font-size:13px">Question ${popIdx+1} of ${popSet.length} &middot; Score so far: ${popScore}</p>
+    <div class="qc"><p style="font-weight:600;font-size:14px;margin:0 0 6px">${it.q}</p>
+      <div id="popOpts">${it.opts.map((o,oi)=>`<button class="opt" data-oi="${oi}">${o}</button>`).join('')}</div>
+      <div class="explain" id="popEx"></div></div>
+    <button class="ghost" id="popNext" style="margin-top:12px;display:none">Next &rarr;</button>`;
+  document.getElementById('popOpts').addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if(!b || b.disabled) return;
+    const oi = +b.dataset.oi;
+    [...document.getElementById('popOpts').children].forEach((el,i) => {
+      el.disabled = true;
+      if(i===it.correct) el.classList.add('correct'); else if(i===oi) el.classList.add('wrong');
+    });
+    if(oi === it.correct) popScore++;
+    const ex = document.getElementById('popEx'); ex.textContent = it.ex; ex.style.display = 'block';
+    document.getElementById('popNext').style.display = 'inline-block';
+  });
+  document.getElementById('popNext').onclick = () => {
+    popIdx++;
+    if(popIdx >= popSet.length){
+      popDone = true;
+      popLastScore = popScore; popLastTotal = popSet.length; popAttemptsCount++;
+      saveState();
+    }
+    renderPop();
+  };
+}
+
+const CHEATSHEET = `
+  <h3 style="color:var(--accent);margin-top:0">Cheat Sheet</h3>
+  <table class="cheat">
+    <tr><th>Task / Fact</th><th>Rule</th></tr>
+    <tr><td>Rain gauge measurement</td><td>Raw tips × mm-per-tip calibration = real rainfall depth</td></tr>
+    <tr><td>Daily consumption</td><td>Average current (mA) × 24h</td></tr>
+    <tr><td>Daily harvest</td><td>Panel watts × real sun-hours × efficiency, converted to mAh</td></tr>
+    <tr><td>Sizing target</td><td>Net balance positive through the CLOUDIEST week, not the sunniest day</td></tr>
+    <tr><td>Autonomy</td><td>(Battery mAh × usable fraction) ÷ daily deficit</td></tr>
+    <tr><td>Wifi vs LoRa</td><td>Wifi = bandwidth/range tradeoff; LoRa = range/power tradeoff for small, rare data</td></tr>
+    <tr><td>BME280 enclosure detail</td><td>Vent membrane required — a sealed box reads pressure wrong</td></tr>
+    <tr><td>Condensation fix</td><td>Same vent membrane that fixes the pressure problem</td></tr>
+    <tr><td>Buying red flag</td><td>No-datasheet humidity sensor clones; solar power banks with no charge-controller IC specified</td></tr>
+  </table>
+  <p style="color:var(--muted);font-size:12px;margin-top:10px">Full lesson content covers the reasoning
+     behind each row — this page is for last-minute recall, not first-time learning.</p>`;
+function renderCheat(){ document.getElementById('toolWrap').innerHTML = CHEATSHEET; }
+
+/* Solar & Battery Sizing Simulator — this project's own Simulation
+   tab. Real solar-sizing math, identical to
+   exercises/solar_power_budget.py: daily consumption, real-world-
+   derated daily harvest, net balance, and autonomy days if running a
+   deficit. Two presets (sunny day vs cloudy week) make the project's
+   own "size for the cloudiest week" theme directly checkable. */
+function spDailyConsumptionMah(avgCurrentMa){ return avgCurrentMa * 24; }
+function spDailyHarvestMah(panelWatts, sunHours, batteryVoltage, efficiency){
+  return (panelWatts * sunHours * efficiency * 1000) / batteryVoltage;
+}
+function spNetDailyBalanceMah(harvestMah, consumptionMah){ return harvestMah - consumptionMah; }
+function spAutonomyDays(batteryCapacityMah, deficitMahPerDay, usableFraction){
+  if(deficitMahPerDay <= 0) return Infinity;
+  return (batteryCapacityMah * usableFraction) / deficitMahPerDay;
+}
+
+const SP_PRESETS = {
+  sunny: { avgCurrent:30, panelWatts:1, sunHours:6, batteryVoltage:3.7, efficiency:0.75, batteryCapacity:2000, usableFraction:0.8 },
+  cloudy: { avgCurrent:30, panelWatts:1, sunHours:1, batteryVoltage:3.7, efficiency:0.75, batteryCapacity:2000, usableFraction:0.8 }
+};
+let spParams = SAVED && SAVED.spParams ? SAVED.spParams : { ...SP_PRESETS.sunny };
+
+function spCompute(){
+  const consumption = spDailyConsumptionMah(spParams.avgCurrent);
+  const harvest = spDailyHarvestMah(spParams.panelWatts, spParams.sunHours, spParams.batteryVoltage, spParams.efficiency);
+  const balance = spNetDailyBalanceMah(harvest, consumption);
+  const deficit = balance < 0 ? -balance : 0;
+  const autonomy = spAutonomyDays(spParams.batteryCapacity, deficit, spParams.usableFraction);
+  return { consumption, harvest, balance, autonomy };
+}
+function spUpdateOutputs(){
+  const { consumption, harvest, balance, autonomy } = spCompute();
+  const el = document.getElementById('spReadout');
+  if(!el) return;
+  const balCls = balance >= 0 ? 'sp-good' : 'sp-bad';
+  const autonomyText = autonomy === Infinity ? 'Indefinite (no deficit)' : `${autonomy.toFixed(2)} days`;
+  el.innerHTML = `<b>Daily consumption:</b> ${consumption.toFixed(1)} mAh &nbsp; <b>Daily harvest:</b> ${harvest.toFixed(1)} mAh<br>
+    <b>Net daily balance:</b> <span class="${balCls}">${balance.toFixed(1)} mAh</span> &nbsp;
+    <b>Battery autonomy if deficit:</b> ${autonomyText}`;
+}
+function renderSolarSim(){
+  document.getElementById('toolWrap').innerHTML = `
+    <h3 style="color:var(--accent);margin-top:0">Solar &amp; Battery Sizing Simulator</h3>
+    <p style="color:var(--muted);font-size:13px">Real solar-sizing math — identical to
+       <code>exercises/solar_power_budget.py</code>. Compare a sunny day against a cloudy week on the
+       exact same hardware.</p>
+    <div class="sp-section">
+      <div class="sp-row">
+        <button class="ghost" id="spPresetSunny">Preset: Sunny day (6h)</button>
+        <button class="ghost" id="spPresetCloudy">Preset: Cloudy week (1h)</button>
+      </div>
+      <div class="sp-row">
+        <label>Avg current (mA) <input type="number" id="spAvgCurrent" value="${spParams.avgCurrent}" step="1"></label>
+        <label>Panel (W) <input type="number" id="spPanelWatts" value="${spParams.panelWatts}" step="0.1"></label>
+        <label>Sun-hours <input type="number" id="spSunHours" value="${spParams.sunHours}" step="0.5"></label>
+        <label>Battery (V) <input type="number" id="spBatteryVoltage" value="${spParams.batteryVoltage}" step="0.1"></label>
+      </div>
+      <div class="sp-row">
+        <label>Efficiency (0-1) <input type="number" id="spEfficiency" value="${spParams.efficiency}" step="0.05" min="0" max="1"></label>
+        <label>Battery (mAh) <input type="number" id="spBatteryCapacity" value="${spParams.batteryCapacity}" step="100"></label>
+        <label>Usable fraction (0-1) <input type="number" id="spUsableFraction" value="${spParams.usableFraction}" step="0.05" min="0" max="1"></label>
+      </div>
+      <div class="sp-readout" id="spReadout"></div>
+    </div>`;
+  spUpdateOutputs();
+
+  const fields = [
+    ['spAvgCurrent','avgCurrent'], ['spPanelWatts','panelWatts'], ['spSunHours','sunHours'],
+    ['spBatteryVoltage','batteryVoltage'], ['spEfficiency','efficiency'],
+    ['spBatteryCapacity','batteryCapacity'], ['spUsableFraction','usableFraction']
+  ];
+  fields.forEach(([elId, key]) => {
+    document.getElementById(elId).addEventListener('input', e => {
+      spParams[key] = +e.target.value || 0;
+      saveState(); spUpdateOutputs();
+    });
+  });
+  document.getElementById('spPresetSunny').onclick = () => { spParams = { ...SP_PRESETS.sunny }; saveState(); renderSolarSim(); };
+  document.getElementById('spPresetCloudy').onclick = () => { spParams = { ...SP_PRESETS.cloudy }; saveState(); renderSolarSim(); };
+}
+
+function letterGrade(pct){
+  if(pct === null) return { text:'—', cls:'grade-dash' };
+  if(pct >= 90) return { text:'A', cls:'grade-A' };
+  if(pct >= 80) return { text:'B', cls:'grade-B' };
+  if(pct >= 70) return { text:'C', cls:'grade-C' };
+  if(pct >= 60) return { text:'D', cls:'grade-D' };
+  return { text:'F', cls:'grade-F' };
+}
+function renderReportCard(){
+  const lessonsDone = answered.filter(Boolean).length;
+  const quizPct = QUIZ.length ? Math.round((score / QUIZ.length) * 100) : null;
+  const quizAttempted = done.size > 0;
+  const grade = letterGrade(quizAttempted ? quizPct : null);
+  const overallItems = lessonsDone + (quizAttempted ? 1 : 0);
+  const overallTotal = LESSONS.length + 1;
+  const overallPct = Math.round((overallItems / overallTotal) * 100);
+  const now = new Date();
+  document.getElementById('toolWrap').innerHTML = `
+    <div class="report-card">
+      <h3 style="color:var(--accent);margin-top:0">Report Card</h3>
+      <p style="color:var(--muted);font-size:12px;margin-top:-6px">Weather &amp; Air Quality Station &middot; generated ${now.toLocaleDateString()} ${now.toLocaleTimeString()}</p>
+      <div class="report-overall">
+        <span class="big ${grade.cls}">${grade.text}</span>
+        <span style="color:var(--muted);font-size:13px">Final quiz grade${quizAttempted ? '' : ' (not yet taken)'}</span>
+      </div>
+      <h4>Lessons</h4>
+      <div class="report-row"><span>Quick checks completed</span><span class="grade">${lessonsDone} / ${LESSONS.length}</span></div>
+      <h4>Final Quiz</h4>
+      <div class="report-row"><span>Score</span><span class="grade">${quizAttempted ? `${score} / ${QUIZ.length} (${quizPct}%)` : 'Not attempted'}</span></div>
+      <h4>Pop Quiz</h4>
+      <div class="report-row"><span>Most recent 5-question run</span><span class="grade">${popLastScore !== null ? `${popLastScore} / ${popLastTotal}` : 'Not attempted'}</span></div>
+      <div class="report-row"><span>Runs completed</span><span class="grade">${popAttemptsCount}</span></div>
+      <h4>Flashcards</h4>
+      <div class="report-row"><span>Terms marked known</span><span class="grade">${fcKnown.size} / ${KEY_TERMS.length}</span></div>
+      <h4>Match Game</h4>
+      <div class="report-row"><span>Best round (fewest attempts)</span><span class="grade">${matchBestAttempts !== null ? matchBestAttempts : 'Not completed'}</span></div>
+      <h4>Overall</h4>
+      <div class="report-row"><span>Lessons + quiz completed</span><span class="grade">${overallItems} / ${overallTotal} (${overallPct}%)</span></div>
+      <button class="ghost" id="printBtn">🖨️ Print / Save as PDF</button>
+      <p style="color:var(--muted);font-size:11px;margin-top:8px">In the print dialog, choose <b>Save as PDF</b> and
+         save it into this project's <code>docs/</code> folder to keep a dated record.</p>
+    </div>`;
+  document.getElementById('printBtn').onclick = () => window.print();
+}
+
+document.getElementById('pills').addEventListener('click', e => {
+  const p = e.target.closest('.pill'); if(!p) return; idx = +p.dataset.i; render();
+});
+document.getElementById('prev').onclick = () => { if(idx>0){ idx--; render(); } };
+document.getElementById('next').onclick = () => { if(idx<LESSONS.length){ idx++; render(); } };
+render();
+</script>
+</body></html>

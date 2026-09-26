@@ -4,17 +4,85 @@
 
 ![Chain K](https://img.shields.io/badge/Chain%20K-64748B?style=for-the-badge) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](LICENSE-GPL) [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue?style=for-the-badge)](LICENSE-AGPL)
 
-[📖 Lesson Plan](docs/LESSON_PLAN.md)
+[🎮 Interactive Tour](docs/interactive/index.html) · [📋 Cheat Sheet](docs/CHEATSHEET.pdf) · [📖 Full Lesson](docs/LESSON.pdf) · [🔗 Resources](docs/RESOURCES.pdf) · [📖 Lesson Plan](docs/LESSON_PLAN.md)
 
 <!-- SCREENSHOT PLACEHOLDER: docs/screenshots/overview.png -->
 
-> ⬜ **Scaffold pending.** Directory created to portfolio standard; full content to be built. Real-hardware build with an emulation/planning-first path. Part of **Chain K — Hardware & Systems Foundations**.
+Real-hardware build with an emulation/planning-first path. Part of **Chain K — Hardware & Systems
+Foundations**. Can reuse **Walkie-Talkie-Build**'s LoRa hardware for reporting, and its waterproofing
+approach directly; sensor/soldering skills come from **Electronics-Circuits-Bench**.
 
-## Why This Was Built
+## What this is
 
 This is the project that actually lives outside — everything else in Chain K can sit on a desk. Weather
 stations force real decisions about power (no wall outlet outdoors), waterproofing (it rains on purpose
-here), and long-running reliability (it has to survive weeks unattended), not just circuit theory.
+here), and long-running reliability (it has to survive weeks unattended), not just circuit theory. The
+four lessons build in the order those real decisions come up: get real sensor readings first, then size
+solar power for the worst realistic week (not the best), then pick a reporting connectivity that
+actually reaches your mounting spot, then weatherproof it correctly for the long haul. Compute a real
+daily energy balance and a real battery-autonomy number — sunny day vs. cloudy week — in the **Solar &
+Battery Sizing Simulator** tab before your station is 20 feet up a pole with no wall outlet nearby.
+
+## Prerequisites
+
+| Requirement | Notes |
+|---|---|
+| A modern browser | Chrome, Firefox, Safari, or Edge — the interactive tour is a single HTML file, no install |
+| Python 3.8+ (for the exercises) | Check with `python3 --version` |
+| A BME280 + microcontroller (optional for the tour/exercises) | Only needed for a real build — the tour and exercises need nothing but a browser and Python |
+
+## Items Needed
+
+- [ ] A BME280 breakout (temperature/humidity/pressure) — see [Hardware Buying Guide](#hardware-buying-guide-what-to-look-for--red-flags) below (check for a real datasheet, avoid undocumented clones)
+- [ ] A tipping-bucket rain gauge with a stated mm-per-tip calibration figure
+- [ ] A microcontroller — ESP32 (wifi) or a LoRa32 (LoRa)
+- [ ] A solar panel + LiPo + charge controller with low-voltage cutoff, for outdoor power
+- [ ] A waterproof enclosure with a vent membrane (not fully sealed)
+- [ ] Nothing else required for the tour or exercises — just a browser and Python
+
+## Quick Start
+
+1. **Open the interactive tour.** Double-click `docs/interactive/index.html` — no server, no build step.
+2. **Work Lesson 1 (Sensors & real-world data)**, and confirm your rain gauge's mm-per-tip calibration
+   figure before treating any tip count as a real measurement.
+3. **Do the skeleton-code exercise.**
+   ```bash
+   cd exercises
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install pytest
+   pytest -v
+   ```
+   You'll see 9 failing tests. Open `exercises/solar_power_budget.py` and implement the four functions
+   — full instructions in [`exercises/README.md`](exercises/README.md).
+4. **Work Lesson 2 (Solar power & battery sizing)**, then open the **Solar & Battery Sizing
+   Simulator** tab and compare the "Sunny day" and "Cloudy week" presets on the same hardware.
+   > ⚠️ **You may get stuck here:** a setup that looks perfectly fine on a sunny-day preset can flip to
+   > a real deficit on the cloudy-week preset with nothing else changed — that's the actual lesson, not
+   > a bug in the simulator.
+5. **Work Lesson 3 (Connectivity)** and test your real wifi signal at the actual mounting spot before
+   committing to a board.
+6. **Work Lesson 4 (Weatherproofing & reliability)** and confirm your enclosure has an explicit vent
+   membrane for the BME280.
+7. **Then the Quiz**, then Flashcards/Match/Pop Quiz for review.
+8. **Check the Report Card tab** any time. Click **Print / Save as PDF** to keep a dated copy in `docs/`.
+
+## Exercise Overview
+
+| # | Lesson | Concept | Solar & Battery Sizing Simulator tie-in |
+|---|---|---|---|
+| 1 | Sensors & real-world data | Rain gauge calibration, sensor trust | *(hands-on wiring — no simulator panel)* |
+| 2 | Solar power & battery sizing | Daily balance, autonomy | The whole simulator — sunny vs. cloudy presets |
+| 3 | Connectivity | Wifi vs. LoRa tradeoffs | *(design decision — no simulator panel)* |
+| 4 | Weatherproofing & reliability | Vent membrane, pressure reading, condensation | *(hands-on build — no simulator panel)* |
+
+**Learning path:**
+```
+Lesson 1 (sensors)  →  Lesson 2 (solar & battery)  →  Lesson 3 (connectivity)  →  Lesson 4 (weatherproofing)
+                              ↓
+             Solar & Battery Sizing Simulator + exercises/ (solar_power_budget.py)
+                              ↓
+             Quiz → Flashcards/Match/Pop Quiz → Report Card
+```
 
 ## Hardware Buying Guide (What to look for & red flags)
 
@@ -90,6 +158,24 @@ long-unattended-uptime are the same problems industrial and agricultural IoT dea
 
 Chain K (Hardware & Systems Foundations). Can reuse **Walkie-Talkie-Build**'s LoRa hardware for reporting,
 and its waterproofing approach directly; sensor/soldering skills come from **Electronics-Circuits-Bench**.
+
+## Project Layout
+
+```
+Weather-And-Air-Quality-Station/
+├── docs/
+│   ├── interactive/index.html   # tour: lessons, quiz, flashcards, match, pop quiz, solar/battery simulator, report card
+│   ├── LESSON_PLAN.md           # short build-plan reference
+│   ├── LESSON.pdf               # the full written lesson, printable
+│   ├── CHEATSHEET.pdf           # one-page recap, printable
+│   ├── RESOURCES.pdf            # further-reading links, printable
+│   └── diagrams/                # wiring.svg + waterproof-enclosure.svg
+├── exercises/
+│   ├── solar_power_budget.py    # skeleton — implement the 4 functions
+│   ├── test_solar_power_budget.py
+│   └── README.md
+└── README.md                    # this file
+```
 
 ---
 Dual licensed — [GPL v3](LICENSE-GPL) and [AGPL v3](LICENSE-AGPL).
